@@ -40,29 +40,47 @@ namespace BattleArena
         }
 
         // ═══════════════════════════════════════
-        // 수신
+        // 수신         ( Part B 부하 측정에서 접속 실패와 스레드 수 증가가 관찰되어, 이 부분 수정
         // ═══════════════════════════════════════
         public static async Task<string?> ReceiveAsync(Socket socket)
         {
             byte[] header = new byte[4];
+            int received = 0;
 
-            // 먼저 헤더 4바이트를 읽어 본문 길이를 알아냅니다.
-            // Receive는 블로킹 함수라서 Task.Run으로 감싸 비동기화했습니다.
-            int n = await Task.Run(() => socket.Receive(header, 0, 4, SocketFlags.None));
+            while (received < header.Length)
+            {
+                int n = await socket.ReceiveAsync(
+                    new ArraySegment<byte>(
+                        header, received, header.Length - received),
+                    SocketFlags.None);
 
-            if (n == 0) return null;          // 상대가 연결을 닫음
+                if (n == 0) return null;
 
+                received += n;
+            }
+
+            // 헤더에서 본문 길이를 읽고 검사한다.
             int bodyLength = BitConverter.ToInt32(header, 0);
 
-            // 말도 안 되는 길이가 오면 끊습니다 (악성 패킷 방어)
-            if (bodyLength <= 0 || bodyLength > MAX_BODY) return null;
+            if (bodyLength <= 0 || bodyLength > MAX_BODY)
+                return null;
 
             byte[] body = new byte[bodyLength];
+            received = 0;
 
-            // 알아낸 길이만큼 본문을 읽습니다.
-            await Task.Run(() => socket.Receive(body, 0, bodyLength, SocketFlags.None));
+            while (received < body.Length)
+            {
+                int n = await socket.ReceiveAsync(
+                    new ArraySegment<byte>(
+                        body, received, body.Length - received),
+                    SocketFlags.None);
 
-            return Encoding.UTF8.GetString(body, 0, bodyLength);
+                if (n == 0) return null;
+
+                received += n;
+            }
+
+            return Encoding.UTF8.GetString(body, 0, body.Length);
         }
     }
 }
