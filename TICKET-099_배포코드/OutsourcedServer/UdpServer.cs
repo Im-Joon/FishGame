@@ -115,17 +115,20 @@ namespace BattleArena
             ClientSession? session = GameServer.Instance.FindSession(playerId);
             if (session == null) return;
 
-            // 첫 UDP 패킷이면 주소를 기억해둡니다.
-            // 앞으로 이 주소로 STATE를 보내줄 겁니다.
+            if (from is not IPEndPoint remote)
+                return;
+
             if (session.UdpEndPoint == null)
             {
-                session.UdpEndPoint = from;
-                Console.WriteLine($"[UDP] {session.Nickname} 주소 등록 : {from}");
+                session.UdpEndPoint = new IPEndPoint(remote.Address, remote.Port);
+                Console.WriteLine($"[UDP] {session.Nickname} 주소 등록 : {remote}");
+            }
+            else if (!session.UdpEndPoint.Equals(remote))
+            {
+                Interlocked.Increment(ref _droppedCount);
+                return;
             }
 
-            // 오래된 패킷은 버립니다.
-            // UDP는 순서를 보장하지 않아서 5번보다 6번이 먼저 올 수 있습니다.
-            // 그때 5번을 적용하면 캐릭터가 뒤로 갑니다.
             if (seq <= session.LastSeq)
             {
                 Interlocked.Increment(ref _droppedCount);
