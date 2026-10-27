@@ -94,8 +94,8 @@ namespace BattleArena
             if (login == null) return;
 
             Nickname = string.IsNullOrWhiteSpace(login.Nickname)
-                ? $"Player{PlayerId}"
-                : login.Nickname;
+             ? $"Player{PlayerId}"
+             : login.Nickname.Replace(',', '_').Replace('|', '_');
 
             await SendAsync(new WelcomePacket
             {
