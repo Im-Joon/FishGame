@@ -69,7 +69,7 @@ namespace BattleArena
                 ClientSession session = new ClientSession(clientSocket, playerId);
                 _sessions.TryAdd(playerId, session);
 
-                _ = session.RunAsync();
+                _ = session.RunAsync();          //보고서 C 3번 재현
             }
         }
 
