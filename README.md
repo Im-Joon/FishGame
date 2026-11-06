@@ -113,6 +113,22 @@
 	</tr>
 </table>
 
+
+## 데이터베이스 테이블
+
+### users(유저 정보)
+
+- **uid (varchar) - 유저 id (PK)**
+- nickname (varchar) - 유저 닉네임
+- id (varchar) - 유저 id
+- pw (varchar) - 유저 pw
+
+### game_histories(게임 히스토리)
+
+- **gid (int) - 게임 id (PK)**
+- uid (varchar) - 유저 id (FK/PK)
+- score (int) - 점수
+
 ## 작업 우선 순위
 
 ### 1순위
